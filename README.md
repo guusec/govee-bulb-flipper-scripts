@@ -1,3 +1,4 @@
 only tested on momentum firmware</br>
-only colors supported are pink and white</br>
-may add more. may also make one for esp32
+micropython only supports pink and white</br>
+esp32 version supports hex codes and hardcoded color values</br>
+script only works fully with esp32 version
