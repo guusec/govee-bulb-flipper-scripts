@@ -1,10 +1,11 @@
-// Flipper Zero Color Controller Script
-// Creates UI with WHITE and PINK buttons that send commands via UART
+// Flipper Zero Govee Controller Script
+// Creates UI with ON/OFF, hex input, and color preset buttons
 
 let eventLoop = require("event_loop");
 let gui = require("gui");
 let submenuView = require("gui/submenu");
 let textBoxView = require("gui/text_box");
+let textInputView = require("gui/text_input");
 let serial = require("serial");
 
 // Initialize UART on usart port (pins 13 TX, 14 RX)
@@ -16,14 +17,27 @@ let serialState = { active: true };
 // Create views
 let views = {
     menu: submenuView.makeWith({
-        header: "Color Controller",
+        header: "Govee Controller",
         items: [
-            "WHITE",
-            "PINK"
+            "ON",
+            "OFF",
+            "Enter Hex Color",
+            "White (FFFFFF)",
+            "Pink (FF15D8)",
+            "Red (FF0000)",
+            "Blue (0000FF)",
+            "Green (00FF00)",
+            "Yellow (FFFF00)",
+            "Purple (8000FF)",
+            "Orange (FF8000)",
+            "Cyan (00FFFF)"
         ],
     }),
-    output: textBoxView.makeWith({
-        text: "Waiting for response...",
+    output: textBoxView.make(),
+    hexInput: textInputView.makeWith({
+        header: "Enter Hex Color",
+        minLength: 6,
+        maxLength: 6,
     })
 };
 
@@ -74,11 +88,66 @@ function sendCommandAndRead(command) {
 // Handle menu selection
 eventLoop.subscribe(views.menu.chosen, function (_sub, index, gui, views) {
     if (index === 0) {
-        // WHITE button pressed
-        sendCommandAndRead("WHITE");
+        // ON button pressed
+        sendCommandAndRead("ON");
     } else if (index === 1) {
-        // PINK button pressed  
-        sendCommandAndRead("PINK");
+        // OFF button pressed
+        sendCommandAndRead("OFF");
+    } else if (index === 2) {
+        // Enter Hex Color - show text input
+        gui.viewDispatcher.switchTo(views.hexInput);
+    } else if (index === 3) {
+        // White (FFFFFF)
+        sendCommandAndRead("FFFFFF");
+    } else if (index === 4) {
+        // Pink (FF15D8)
+        sendCommandAndRead("FF15D8");
+    } else if (index === 5) {
+        // Red (FF0000)
+        sendCommandAndRead("FF0000");
+    } else if (index === 6) {
+        // Blue (0000FF)
+        sendCommandAndRead("0000FF");
+    } else if (index === 7) {
+        // Green (00FF00)
+        sendCommandAndRead("00FF00");
+    } else if (index === 8) {
+        // Yellow (FFFF00)
+        sendCommandAndRead("FFFF00");
+    } else if (index === 9) {
+        // Purple (8000FF)
+        sendCommandAndRead("8000FF");
+    } else if (index === 10) {
+        // Orange (FF8000)
+        sendCommandAndRead("FF8000");
+    } else if (index === 11) {
+        // Cyan (00FFFF)
+        sendCommandAndRead("00FFFF");
+    }
+}, gui, views);
+
+// Handle hex input submission
+eventLoop.subscribe(views.hexInput.input, function (_sub, text, gui, views) {
+    // Validate hex input (should be 6 characters, all hex digits)
+    if (text.length === 6) {
+        let isValidHex = true;
+        for (let i = 0; i < text.length; i++) {
+            let char = text[i].toUpperCase();
+            if (!((char >= '0' && char <= '9') || (char >= 'A' && char <= 'F'))) {
+                isValidHex = false;
+                break;
+            }
+        }
+
+        if (isValidHex) {
+            sendCommandAndRead(text.toUpperCase());
+        } else {
+            views.output.set("text", "Invalid hex color: " + text + "\nPlease use only 0-9 and A-F characters");
+            gui.viewDispatcher.switchTo(views.output);
+        }
+    } else {
+        views.output.set("text", "Invalid hex color length: " + text + "\nPlease enter exactly 6 characters");
+        gui.viewDispatcher.switchTo(views.output);
     }
 }, gui, views);
 
